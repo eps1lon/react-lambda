@@ -1,6 +1,6 @@
 import React from "react";
-import hash from "object-hash";
 
+import hash from "./object-hash";
 import CssOm from "./CssOm";
 
 export default function createStylingSolution() {
