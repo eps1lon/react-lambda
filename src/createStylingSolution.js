@@ -1,9 +1,7 @@
 import React from "react";
 import hash from "object-hash";
 
-export default createStylingSolution;
-
-function createStylingSolution() {
+export default function createStylingSolution() {
   const classes = new Map();
   const Context = React.createContext({ classes, theme: {} });
 
@@ -59,7 +57,7 @@ function useCreateStylesheet() {
   const styleNode = React.useRef();
 
   React.useLayoutEffect(() => {
-    const style = document.createElement(style);
+    const style = document.createElement('style');
     style.type = "text/css";
 
     const head = document.head;
@@ -81,7 +79,7 @@ function useUpdateStylesheet(styleNode, className, styles) {
         element.style.setProperty(name, value);
       });
 
-      const { current: sheet } = styleNode;
+      const { sheet } = styleNode.current;
       sheet.insertRule("strong { color: red; }", sheet.cssRules.length);
     },
     [styleNode, className, styles]
