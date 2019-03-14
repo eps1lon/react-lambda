@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import ReactDOMServer from "react-dom/server";
 
 import createStylingSolution from "./createStylingSolution";
 
@@ -62,3 +63,5 @@ function App() {
 
 const rootElement = document.getElementById("root");
 ReactDOM.render(<App />, rootElement);
+
+console.log(ReactDOMServer.renderToString(<App />));

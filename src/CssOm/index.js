@@ -12,20 +12,20 @@ export default function StyleSheet(props) {
     document.head.appendChild(style);
   }, []);
 
+  const css = rules.map(rule => {
+    return (
+      <Rule key={rule.selector} selector={rule.selector}>
+        {rule.style}
+      </Rule>
+    );
+  });
+
   if (container == null) {
-    return null;
+    // branch hit on server and initial browser render but rules arent defined yet
+    return css;
   }
 
-  return ReactDOM.createPortal(
-    rules.map(rule => {
-      return (
-        <Rule key={rule.selector} selector={rule.selector}>
-          {rule.style}
-        </Rule>
-      );
-    }),
-    container
-  );
+  return ReactDOM.createPortal(css, container);
 }
 
 function Rule(props) {
