@@ -1,9 +1,16 @@
 import React from "react";
 import hash from "object-hash";
 
+import CssOm from "./CssOm";
+
 export default function createStylingSolution() {
-  const classes = new Map();
-  const Context = React.createContext({ classes, theme: {} });
+  const Context = React.createContext({
+    addClass: () => {
+      //warn
+    },
+    classes: new Map(),
+    theme: {}
+  });
 
   function useClassName(stylesCreator) {
     const theme = useTheme();
@@ -17,6 +24,12 @@ export default function createStylingSolution() {
     return className;
   }
 
+  function useAddClass() {
+    const { addClass } = React.useContext(Context);
+
+    return addClass;
+  }
+
   function useTheme() {
     const { theme } = React.useContext(Context);
 
@@ -25,75 +38,65 @@ export default function createStylingSolution() {
 
   function useStylesheet(styles) {
     const stylesId = hash(styles);
-    const prevStylesId = usePrevious(stylesId);
-
-    /**
-     * render side-effect
-     * this is important to collect the stylesheet with ssr
-     */
-    classes.delete(prevStylesId);
-    classes.set(stylesId, styles);
+    const addClass = useAddClass();
 
     const className = `lambda-${stylesId}`;
-
-    const styleNode = useCreateStylesheet();
-    useUpdateStylesheet(styleNode, className, styles);
+    React.useMemo(() => addClass(className, styles), [className, styles]);
 
     return className;
   }
 
   function Provider(props) {
     const { children, theme } = props;
+    const [classes, dispatch] = React.useReducer((state, action) => {
+      switch (action.type) {
+        case "ADD":
+          return new Map(
+            state.set(action.payload.className, action.payload.style)
+          );
+        case "REMOVE":
+        state.delete(action.payload.className);
+          return state;
+        default:
+          throw new Error(`unrecognized type '${action.type}'`);
+      }
+    }, new Map());
 
-    const value = React.useMemo(() => ({ classes, theme }), [classes, theme]);
+    const addClass = React.useCallback((className, style) => {
+      dispatch({ type: "ADD", payload: { className, style } });
+    }, []);
 
-    return <Context.Provider value={value}>{children}</Context.Provider>;
+    const value = React.useMemo(() => ({ addClass, classes, theme }), [
+      addClass,
+      classes,
+      theme
+    ]);
+
+    const rules = React.useMemo(() => {
+      return Array.from(classes.entries()).map(([className, style]) => {
+        return {
+          selector: `.${className}`,
+          style
+        };
+      });
+    }, [classes]);
+
+    return (
+      <Context.Provider value={value}>
+        <CssOm rules={rules} />
+        {children}
+      </Context.Provider>
+    );
   }
 
   return { Provider, useClassName, useTheme };
 }
 
-function useCreateStylesheet() {
-  const styleNode = React.useRef();
-
-  React.useLayoutEffect(() => {
-    const style = document.createElement('style');
-    style.type = "text/css";
-
-    const head = document.head;
-    head.appendChild(style);
-
-    styleNode.current = style;
-    // freeze styleNode in dev
-  }, []);
-
-  return styleNode;
-}
-
-function useUpdateStylesheet(styleNode, className, styles) {
-  React.useLayoutEffect(
-    () => {
-      const element = document.createElement("div");
-
-      Object.entries(styles).forEach(([name, value]) => {
-        element.style.setProperty(name, value);
-      });
-
-      const { sheet } = styleNode.current;
-      sheet.insertRule(`.${className} { ${element.style.cssText} }`, sheet.cssRules.length);
-    },
-    [styleNode, className, styles]
-  );
-}
-
-function usePrevious(value) {
+/* function usePrevious(value) {
   const prev = React.useRef(value);
-  React.useEffect(
-    () => {
-      prev.current = value;
-    },
-    [value]
-  );
+  React.useEffect(() => {
+    prev.current = value;
+  }, [value]);
 
   return prev.current;
-}
+} */
