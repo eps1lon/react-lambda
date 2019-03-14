@@ -32,7 +32,7 @@ function App() {
   return (
     <Provider>
       <label htmlFor="color">color</label>
-      <input id="color" onInput={handleInput} value={color} />
+      <input id="color" onChange={handleInput} value={color} />
       <Text color={color}>Hello, World</Text>
     </Provider>
   );
