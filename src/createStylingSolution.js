@@ -80,7 +80,7 @@ function useUpdateStylesheet(styleNode, className, styles) {
       });
 
       const { sheet } = styleNode.current;
-      sheet.insertRule("strong { color: red; }", sheet.cssRules.length);
+      sheet.insertRule(`.${className} { ${element.style.cssText} }`, sheet.cssRules.length);
     },
     [styleNode, className, styles]
   );
