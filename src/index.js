@@ -7,33 +7,55 @@ const { Provider, useClassName } = createStylingSolution();
 
 function Text(props) {
   const { children, color } = props;
-  const stylesCreator = React.useMemo(
-    () => {
-      return theme => {
-        return {
-          color
-        };
+  const stylesCreator = React.useMemo(() => {
+    return theme => {
+      return {
+        "background-color": theme.backgroundColor,
+        color
       };
-    },
-    [color]
-  );
+    };
+  }, [color]);
 
   const className = useClassName(stylesCreator);
 
   return <div className={className}>{children}</div>;
 }
 
-function App() {
-  const [color, setColor] = React.useState("blue");
+function UncontrolledText(props) {
+  const { children, defaultColor, id } = props;
+  const [color, setColor] = React.useState(defaultColor);
   function handleInput(event) {
     setColor(event.currentTarget.value);
   }
 
   return (
-    <Provider>
-      <label htmlFor="color">color</label>
-      <input id="color" onChange={handleInput} value={color} />
-      <Text color={color}>Hello, World</Text>
+    <>
+      <label htmlFor={id}>{id} color: </label>
+      <input id={id} onChange={handleInput} value={color} />
+      <Text color={color}>{children}</Text>
+    </>
+  );
+}
+
+function App() {
+  const [color, setColor] = React.useState("black");
+  function handleInput(event) {
+    setColor(event.currentTarget.value);
+  }
+
+  const theme = React.useMemo(() => ({ backgroundColor: color }), [color]);
+
+  return (
+    <Provider theme={theme}>
+      <label htmlFor="themeColor">background color: </label>
+      <input id="themeColor" onChange={handleInput} value={color} />
+      <br />
+      <UncontrolledText defaultColor="red" id="ex1">
+        Hello, World
+      </UncontrolledText>
+      <UncontrolledText defaultColor="yellow" id="ex2">
+        Hello, from another World
+      </UncontrolledText>
     </Provider>
   );
 }
