@@ -4,13 +4,12 @@ import hash from "object-hash";
 import CssOm from "./CssOm";
 
 export default function createStylingSolution() {
-  const Context = React.createContext({
+  const MethodContext = React.createContext({
     addClass: () => {
-      //warn
-    },
-    classes: new Map(),
-    theme: {}
+      // warn
+    }
   });
+  const ThemeContext = React.createContext({});
 
   function useClassName(stylesCreator) {
     const theme = useTheme();
@@ -25,13 +24,13 @@ export default function createStylingSolution() {
   }
 
   function useAddClass() {
-    const { addClass } = React.useContext(Context);
+    const { addClass } = React.useContext(MethodContext);
 
     return addClass;
   }
 
   function useTheme() {
-    const { theme } = React.useContext(Context);
+    const theme = React.useContext(ThemeContext);
 
     return theme;
   }
@@ -55,7 +54,7 @@ export default function createStylingSolution() {
             state.set(action.payload.className, action.payload.style)
           );
         case "REMOVE":
-        state.delete(action.payload.className);
+          state.delete(action.payload.className);
           return state;
         default:
           throw new Error(`unrecognized type '${action.type}'`);
@@ -66,12 +65,6 @@ export default function createStylingSolution() {
       dispatch({ type: "ADD", payload: { className, style } });
     }, []);
 
-    const value = React.useMemo(() => ({ addClass, classes, theme }), [
-      addClass,
-      classes,
-      theme
-    ]);
-
     const rules = React.useMemo(() => {
       return Array.from(classes.entries()).map(([className, style]) => {
         return {
@@ -81,11 +74,17 @@ export default function createStylingSolution() {
       });
     }, [classes]);
 
+    const methods = React.useMemo(() => ({ addClass }), [addClass]);
+
     return (
-      <Context.Provider value={value}>
+      <>
         <CssOm rules={rules} />
-        {children}
-      </Context.Provider>
+        <ThemeContext.Provider value={theme}>
+          <MethodContext.Provider value={methods}>
+            {children}
+          </MethodContext.Provider>
+        </ThemeContext.Provider>
+      </>
     );
   }
 
