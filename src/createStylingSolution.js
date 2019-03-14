@@ -53,9 +53,6 @@ export default function createStylingSolution() {
           return new Map(
             state.set(action.payload.className, action.payload.style)
           );
-        case "REMOVE":
-          state.delete(action.payload.className);
-          return state;
         default:
           throw new Error(`unrecognized type '${action.type}'`);
       }
